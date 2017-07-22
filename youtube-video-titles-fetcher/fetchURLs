@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Example URL (official API):
+#   https://gdata.youtube.com/feeds/api/users/USERNAME/uploads?max-results=50&start-index=1&prettyprint=true&fields=entry(title,media:group(media:player(@url)))
+
+curl "https://gdata.youtube.com/feeds/api/users/USERNAME/uploads?max-results=50&start-index=1&prettyprint=true&fields=entry(title,media:group(media:player(@url)))"

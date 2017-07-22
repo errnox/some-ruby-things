@@ -1,0 +1,107 @@
+require 'rake/clean'
+require 'gruff'
+
+
+dir = File.expand_path(File.dirname(__FILE__))
+html_output_dir = "#{dir}/res/html"
+CLEAN.include html_output_dir
+
+
+namespace :diverse do
+  desc 'Run the default task'
+  task :default => [:work]
+
+  task :work do
+    puts 'Working'
+  end
+
+  desc 'Eat some food (takes food to eat as parameters)'
+  task :eat, [:food] => :work do |t, args|
+    args.to_a.each { |arg| puts "Eating #{arg}" }
+    # Also possible:
+    #
+    #   [args.food, *args.extras].each { |arg| puts "Eating #{arg}" }
+  end
+
+  desc "Create the `output' directory"
+  directory 'output'
+  file 'output' do
+    File.open('output/message', 'w+') do |f|
+      f.write "This is a message.\n"
+    end
+    puts "Created `output' directory"
+  end
+
+  desc 'Convert all Markdown files to HTML files'
+  source_files = Rake::FileList.new('**/*.md', '**/*.markdown') do |f|
+    f.exclude '~*'
+    f.exclude(/tmp\//)
+  end
+  task :convert => [:convert_files, :graph, 'tree.txt']
+  task :convert_files => source_files.ext('.html')
+  rule '.html' => '.md' do |t|
+    mkdir_p html_output_dir
+    html_file = t.name.pathmap('%d/html/%f')
+    system "pandoc -o #{html_file} #{t.source}"
+    # Generate book
+    system "cat #{html_file} >> #{html_output_dir + '/book.html'}"
+  end
+
+  task :graph do
+    generate_graph html_output_dir + '/'
+    file_path = html_output_dir + '/book.html'
+    file_contents = File.open(file_path, 'r').read
+    File.open(file_path, 'w+') do |f|
+      f.write <<-STRINGSTRINGSTRING
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Book</title>
+  </head>
+  </body>
+STRINGSTRINGSTRING
+      f.write "<image src=#{html_output_dir + '/graph.png'} \
+alt=\"Graph\"/>"
+      f.write file_contents
+      f.write "\n  </body>"
+    end
+  end
+
+  def generate_graph(output_dir)
+    graph = Gruff::Bar.new('600x400')
+    graph.title = 'Number of lines per file'
+    line_numbers = []
+    Dir.foreach(output_dir) do |element|
+      if !(element =~ /^\.\.?$/)
+        line_numbers <<
+          [element,
+           File.foreach(output_dir + '/' +
+                        element).inject(0) { |result, elem| result + 1}]
+      end
+    end
+    labels = {}
+    line_numbers.sort! { |a, b| a[1] <=> b[1]}.each_with_index do |no, i|
+      labels[i] = no[1].to_s + "\n#{no[0]}"
+      # graph.data no[0], no[1]
+    end
+    graph.labels = labels
+    graph.data 'Data', line_numbers.collect { |x| x[1] }
+    graph.hide_legend = true
+    graph.theme = {
+      :colors => %w{red green blue orange brown yellow  pink grey},
+      :marker_color => 'grey',
+      :font_color => '#121212',
+      :background_colors => 'transparent'
+    }
+    graph.minimum_value = 0
+    graph.write(output_dir + 'graph.png')
+  end
+
+  CLEAN.include dir + '/tree.txt'
+  file 'tree.txt' do |t|
+    File.open(t.name, 'w') do |f|
+      f.puts `tree --charset="ASCII"`
+    end
+  end
+
+end

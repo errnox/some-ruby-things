@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+class Piano
+  def initialize()
+    @chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    @nums = ['1', '2', '3', '4', '5', '6', '7']
+  end
+
+  def play
+    `export AUDIOENV=hw:0`
+    `export AUDIDRIVER=alsa`
+    10.times do
+      [*1..8].sample.times do |i|
+        sleep([*0..6].sample * 0.1)
+        # play_note(@chars.sample + @nums.sample)
+        play_keys(@chars.sample, i)
+      end
+    end
+  end
+
+  def play_note(note)
+    IO.popen("play -qn synth 4 pluck #{note} &>/dev/null &")
+  end
+
+  def play_keys(char, num)
+    play_note("#{char}#{num}")
+  end
+end
+
+piano = Piano.new
+piano.play

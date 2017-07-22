@@ -1,0 +1,40 @@
+---
+# colors:
+# - light:
+#   - red
+#   - orange
+#   - yellow
+#   - pink
+# - dark:
+#   - blue
+#   - brown
+#   - grey
+
+-
+    URL: "users/list"
+    method: "GET"
+    description: "This fetches a list of all users."
+    code: puts "Something"
+
+-
+    URL: "posts/list"
+    method: "GET"
+    description: "This fetches a list of all posts."
+    code: &id001 |
+
+      class Foo
+        def bar
+          puts 'BAR'
+        end
+      end
+      # Instantiate the `Foo' class
+      foo = Foo.new
+      foo.bar
+      # Get the current time and write it to stdout.
+      puts "Date: #{`date`.strip}"
+
+-
+    URL: "user/(:name)/update"
+    method: "POST"
+    description: This updates the name of the user with name `:name'.
+    code: *id001

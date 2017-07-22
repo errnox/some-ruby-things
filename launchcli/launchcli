@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+
+class Launchcli
+  def initialize()
+    @choices = [];
+    @commands_file_name = '.launchcli'
+    @commands_file_location = Dir.home + '/' + @commands_file_name
+    @options = read_commands_file()
+    @separator = '-' * 75
+  end
+
+  public
+
+  def run()
+    print("Search: ")
+    search_string = gets
+    matches = @options.find_all do |s|
+      Regexp.new(search_string.strip) =~ s
+    end
+    puts
+    matches.each_with_index { |s, i|  puts("#{"%4d" % (i + 1)}  #{s}")}
+    print("\nChose: ")
+    choice = gets.strip.to_i - 1
+    command = matches[choice]
+    puts("\nRun:\n" + command)
+    puts(@separator)
+    exec(command)
+  end
+
+  private
+
+  def read_commands_file()
+    @options = File.open(@commands_file_location, 'r').read().split("\n")
+  end
+end
+
+launchcli = Launchcli.new();
+begin
+  launchcli.run();
+rescue
+  puts('Something went wrong.')
+end
